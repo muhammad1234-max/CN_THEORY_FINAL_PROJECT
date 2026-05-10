@@ -1,0 +1,42 @@
+{
+  "muhammad": {
+    "username": "muhammad",
+    "salt": "0ac133457af53e94c50a4fea5a1a8289",
+    "password_hash": "8ff35005da4f3d9c06042815ac67a62e02e63071b876ba43cd71171eefc61f62",
+    "failed_attempts": 0,
+    "locked_until": null,
+    "created_at": "2026-04-27T20:56:39.911434"
+  },
+  "hamza": {
+    "username": "hamza",
+    "salt": "fa438a66157e25928bb8ebe2f17b0579",
+    "password_hash": "ed3e0ea4b1634a0de38a38def1b3a9f7e89b989bdd9e66102a84e396f3d20a3a",
+    "failed_attempts": 0,
+    "locked_until": null,
+    "created_at": "2026-04-27T21:00:49.776940"
+  },
+  "hehe": {
+    "username": "hehe",
+    "salt": "b12094a5bfefeb79baa7c30942ea3a88",
+    "password_hash": "b02ef8fb6abb6b4b3d1962702fe5e2ca654dc985aa4e1d253a28de686c57f67d",
+    "failed_attempts": 0,
+    "locked_until": null,
+    "created_at": "2026-04-27T21:17:04.957634"
+  },
+  "admin123": {
+    "username": "admin123",
+    "salt": "bfcfe1b8eb1f731a7590e90876145ff4",
+    "password_hash": "201da24365925ff5aa14c997faf8b91b4a8d21dc81c26093093d1335c88e1990",
+    "failed_attempts": 0,
+    "locked_until": null,
+    "created_at": "2026-05-10T19:09:05.905419"
+  },
+  "testuser": {
+    "username": "testuser",
+    "salt": "2e062ab4cd09b9c49d487df08af44d19",
+    "password_hash": "3c0de7825381bd0d14869b717833d881547a33ea73d82adab860c6c6f4045578",
+    "failed_attempts": 0,
+    "locked_until": null,
+    "created_at": "2026-05-10T19:14:51.934575"
+  }
+}

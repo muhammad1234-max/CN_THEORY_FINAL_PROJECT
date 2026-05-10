@@ -1,0 +1,9 @@
+{
+  "0ba292972869c3451b645c83fcf64a1892bdf26de4b9cb1d3cbf0dce19d7523d": {
+    "token": "0ba292972869c3451b645c83fcf64a1892bdf26de4b9cb1d3cbf0dce19d7523d",
+    "username": "testuser",
+    "issued_at": "2026-05-10T19:16:12.685335",
+    "expires_at": "2026-05-10T19:46:12.685335",
+    "client_ip": "127.0.0.1"
+  }
+}

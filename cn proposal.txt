@@ -1,0 +1,204 @@
+User Authentication through Socket Programming
+A Secure, Multi-Client Authentication System Using Python, Java, Sockets & Flask
+
+Course: Networks Programming
+Project No.: 5
+
+Team Members: Hamza (23k-0060) | Muhammad Abbas (23k-0068)
+
+Submission Date: March 2025
+Technologies: Python, Java, Sockets, Flask
+
+Project Proposal | User Authentication through Socket Programming Networks Programming
+
+Hamza (23k-0060) | Muhammad Abbas (23k-0068) Page 2
+1. Executive Summary
+This project designs and implements a network-based user authentication system that allows multiple clients
+to securely verify their identity before accessing a protected server. The system is built on raw socket
+programming in Python and Java to demonstrate fundamental network communication protocols, while
+Flask provides a web-based management interface for administrators.
+The project goes beyond a simple login form. It delivers a full client-server architecture with encrypted
+credential transmission, session token management, account lockout policies, registration workflows, and an
+administrative dashboard — features representative of production authentication systems encountered in
+real-world software engineering.
+
+2. Problem Statement
+Modern networked applications require reliable mechanisms to verify user identity before granting access to
+sensitive resources. Naive implementations — plain-text password transmission, no session management,
+no brute-force protection — expose users and systems to a wide class of attacks including credential
+interception, replay attacks, and denial-of-service via account flooding.
+This project addresses the engineering challenge of building a correct, secure, and multi-client
+authentication system from first principles using socket-level programming, thereby demonstrating:
+• How TCP sockets are used to establish persistent client-server channels
+• How credentials are transmitted without exposing plain-text passwords over the wire
+• How session state is managed across multiple concurrent clients
+• How a web interface can be layered on top of a socket-based backend
+
+3. Project Objectives
+3.1 Primary Objectives
+1. Implement a multi-threaded TCP server in Python that accepts concurrent client connections and
+handles authentication requests independently per thread.
+2. Implement a Java client that connects to the server over TCP, sends credentials, and processes
+authentication responses.
+3. Implement secure credential handling: passwords stored as salted SHA-256 hashes; credentials
+transmitted over the socket using a simple application-layer protocol.
+4. Implement session token generation and validation: upon successful login, the server issues a token;
+subsequent requests carry the token instead of credentials.
+5. Implement account lockout: after N consecutive failed attempts, the account is temporarily locked and
+unlocked after a configurable timeout.
+6. Build a Flask web interface that allows administrators to register new users, view active sessions,
+unlock locked accounts, and view login audit logs.
+3.2 Secondary Objectives
+
+Project Proposal | User Authentication through Socket Programming Networks Programming
+
+Hamza (23k-0060) | Muhammad Abbas (23k-0068) Page 3
+• Demonstrate the difference between authenticated and unauthenticated access by implementing a
+protected resource endpoint accessible only with a valid session token.
+• Implement a user registration workflow through both the socket protocol and the Flask interface.
+• Log all authentication events (success, failure, lockout, unlock) with timestamps to a persistent file for
+audit purposes.
+• Write unit tests for credential hashing, token generation, and lockout logic.
+
+4. Scope of Work
+The following components make up the full deliverable scope:
+• TCP Auth Server — Multi-threaded server; accepts connections; dispatches to handler threads
+[Python (socket, threading)]
+• Application Protocol — Custom text-based protocol (REGISTER, LOGIN, ACCESS, LOGOUT,
+STATUS) [Python]
+• Credential Store — User DB: username, salted hash, salt, failed_attempts, locked_until [Python (JSON
+/ SQLite)]
+• Password Hashing — PBKDF2-HMAC-SHA256 with per-user random salt; no plain-text storage
+[Python (hashlib, secrets)]
+• Session Manager — Token generation (secrets.token_hex), token-to-user mapping, expiry [Python]
+• Lockout Policy — Counter incremented per failure; lock applied after 5 failures; 5-min TTL [Python]
+• Java TCP Client — Connects to server; presents interactive CLI; sends protocol messages [Java
+(java.net.Socket)]
+• Protected Resource — Endpoint that returns data only if request carries a valid session token [Python]
+• Flask Admin UI — Web interface: register, list users, view sessions, unlock, audit log [Python (Flask,
+Jinja2)]
+• Audit Logger — Writes timestamped events to auth.log with client IP and username [Python (logging)]
+• Unit Tests — Tests for hashing, token issuance, lockout counter, protocol parsing [Python (pytest)]
+• Documentation — Architecture diagram, protocol spec, setup guide, test report [Markdown / Word]
+5. System Architecture
+5.1 Component Diagram
+The system consists of four interacting layers:
+• Java Client — connects over TCP port 9000; sends REGISTER/LOGIN/ACCESS/LOGOUT
+commands
+• Python Auth Server — accepts connections on port 9000; authenticates; issues tokens; enforces
+lockout
+• Flask Admin Server — runs on port 5000; reads from the same credential store; exposes a web UI
+• Shared State Layer — a JSON or SQLite file holding user records, active sessions, and the audit log
+Clients never connect to Flask directly; Flask is an administrative interface only. The socket server and Flask
+share the same credential store via file-based or in-process locking.
+5.2 Custom Socket Protocol
+
+Project Proposal | User Authentication through Socket Programming Networks Programming
+
+Hamza (23k-0060) | Muhammad Abbas (23k-0068) Page 4
+Communication between the Java client and Python server follows a newline-delimited text protocol:
+• REGISTER username password → OK or ERR:
+• LOGIN username password → TOKEN: or ERR:INVALID_CREDENTIALS or ERR:LOCKED
+• ACCESS token resource_id → DATA: or ERR:INVALID_TOKEN or ERR:EXPIRED
+• LOGOUT token → OK or ERR:INVALID_TOKEN
+• STATUS token → ACTIVE: or ERR:INVALID_TOKEN
+5.3 Credential Storage Schema
+Each user record (JSON or SQLite row) stores:
+• username — unique identifier
+• salt — 16-byte random value (hex-encoded), unique per user
+• password_hash — PBKDF2-HMAC-SHA256(password + salt, iterations=100000)
+• failed_attempts — integer counter, reset to 0 on successful login
+• locked_until — ISO-8601 timestamp or null; lockout expires automatically
+• created_at — registration timestamp
+5.4 Session Token Lifecycle
+• Issued by secrets.token_hex(32) on successful LOGIN — 64-character cryptographically random hex
+string
+• Stored server-side in a dict: token → {username, issued_at, expires_at}
+• Default TTL: 30 minutes; configurable constant
+• Invalidated on LOGOUT or expiry; expired tokens rejected with ERR:EXPIRED
+• Active session count visible in Flask admin dashboard
+
+6. Flask Admin Interface
+The Flask application exposes the following routes, protected by a separate admin password:
+• / or /dashboard [GET] — Summary: total users, active sessions, recent failed logins
+• /users [GET] — Table of all users with status (active / locked / never logged in)
+• /users/register [POST] — Admin-side user creation form
+• /users//unlock [POST] — Manually unlock a locked account
+• /sessions [GET] — List of all active tokens with username, issue time, expiry
+• /sessions//revoke [POST] — Force-invalidate a specific session token
+• /audit [GET] — Paginated audit log: timestamp, event type, username, IP address
+7. Security Design
+7.1 Threat Model
+• Passive eavesdropper on the local network — mitigated by never sending plain-text passwords;
+credentials hashed server-side immediately on receipt
+• Brute-force / credential stuffing — mitigated by account lockout policy (5 failures → 5-minute lock)
+• Session hijacking — mitigated by 64-character random token and short TTL
+
+Project Proposal | User Authentication through Socket Programming Networks Programming
+
+Hamza (23k-0060) | Muhammad Abbas (23k-0068) Page 5
+• Replay attack — mitigated by token expiry; a captured token becomes useless after 30 minutes
+7.2 Password Hashing Rationale
+SHA-256 alone is insufficient because it is fast to compute, making brute-force feasible.
+PBKDF2-HMAC-SHA256 with 100,000 iterations adds a computational cost that makes offline dictionary
+attacks impractical on commodity hardware. Per-user random salts prevent rainbow table attacks.
+7.3 Known Limitations (Scope Boundary)
+• The socket protocol does not use TLS in the base implementation. An extension to wrap the socket in
+ssl.wrap_socket() is listed in future work.
+• The system is designed for a trusted LAN environment, not public internet deployment.
+
+8. Implementation Plan
+• Phase 1 — Core Server (Week 1): Python TCP server skeleton; threading; basic REGISTER + LOGIN
+commands; plain credential store
+• Phase 2 — Security Layer (Week 2): PBKDF2 hashing; salt generation; token issuance; session store;
+lockout policy
+• Phase 3 — Java Client (Week 3): Java TCP client CLI; protocol parser; interactive loop; test against
+Python server
+• Phase 4 — Flask Admin UI (Week 4): Flask app; all routes; Jinja2 templates; admin auth; shared state
+integration
+• Phase 5 — Testing & Docs (Week 5): pytest unit tests; integration test (multi-client); audit log
+validation; final documentation
+
+9. Deliverables
+• auth_server.py — fully working Python TCP authentication server
+• auth_client/ — Java client source with build instructions (Maven or plain javac)
+• flask_admin/ — Flask admin web application with HTML templates
+• tests/ — pytest test suite covering hashing, tokens, lockout, and protocol parsing
+• auth.log — sample audit log generated by running the test suite
+• README.md — architecture overview, setup instructions, how to run and test
+• Project Report (Word) — detailed design document with protocol spec, security analysis, and test
+results
+• Demo Video (5–7 min) — screen recording of multi-client authentication, lockout trigger, admin UI
+walkthrough
+
+10. Tools & Technologies
+• Python 3.11+ — Server, business logic, Flask. Native socket & hashlib; rapid development.
+• Java 17+ — TCP Client. Demonstrates cross-language socket interop via standard TCP.
+• Python socket module — TCP transport layer. Direct access to OS TCP stack; no abstraction
+overhead.
+• java.net.Socket — Java TCP transport. Standard JDK class; no external dependencies.
+
+Project Proposal | User Authentication through Socket Programming Networks Programming
+
+Hamza (23k-0060) | Muhammad Abbas (23k-0068) Page 6
+• Flask 3.x — Admin web interface. Lightweight WSGI framework; minimal boilerplate.
+• hashlib / secrets — Cryptographic primitives. PBKDF2-HMAC-SHA256 and CSPRNG token
+generation.
+• SQLite / JSON — Persistent credential store. Zero-install, file-based; sufficient for project scale.
+• pytest — Unit & integration testing. Standard Python test framework; fixture support.
+• Jinja2 — HTML templating (Flask). Bundled with Flask; logic-less templates.
+
+11. Team Responsibilities
+• Hamza (23k-0060) — Python TCP server, security layer (hashing, tokens, lockout), unit tests,
+documentation
+• Muhammad Abbas (23k-0068) — Java TCP client, Flask admin interface, integration testing, demo
+video
+
+12. Risk Assessment
+• Java-Python socket compatibility issues (Likelihood: Low, Impact: Medium) — Define protocol in
+writing first; test with netcat before Java client
+• Shared-state race conditions (multi-threaded) (Likelihood: Medium, Impact: High) — Use
+threading.Lock around all credential store reads/writes
+• Flask + socket server port conflicts (Likelihood: Low, Impact: Low) — Assign fixed ports (9000 for auth,
+5000 for Flask) in config file
+• Scope creep into TLS/SSL implementation (Likelihood: Medium, Impact: Medium) — TLS
